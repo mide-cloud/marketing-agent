@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Agent</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;--bg2:#161922;--bg3:#1e2330;--border:#2a2f3e;--border2:#353c50;
+  --text:#e8eaf0;--text2:#9ba3b8;--text3:#5a6278;
+  --blue:#3b82f6;--blue2:#1d4ed8;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--purple:#a855f7;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.logo-text{font-weight:700;font-size:15px}
+.nav{flex:1;padding:12px 8px}
+.nav-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:12px 8px 4px}
+.nav-item{padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--text2);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--bg3);color:var(--text);border-left:3px solid var(--blue);padding-left:9px}
+.nav-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+
+/* Main */
+.main{flex:1;overflow-y:auto;padding:28px 32px}
+.page-title{font-size:22px;font-weight:700;margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--text2);margin-bottom:24px}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{padding:20px;text-align:center}
+.stat-num{font-size:28px;font-weight:700}
+.stat-label{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue2)}
+.btn-secondary{background:transparent;color:var(--text2);border:1px solid var(--border2)}.btn-secondary:hover{color:var(--text);border-color:var(--text2)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(239,68,68,.3)}.btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{filter:brightness(1.1)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit}
+.form-input:focus{border-color:var(--blue)}
+.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:ui-monospace,monospace;outline:none;resize:vertical;min-height:220px;line-height:1.6}
+.form-textarea:focus{border-color:var(--blue)}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-blue{background:rgba(59,130,246,.15);color:#93c5fd}
+.badge-green{background:rgba(34,197,94,.15);color:#86efac}
+.badge-yellow{background:rgba(245,158,11,.15);color:#fcd34d}
+.badge-red{background:rgba(239,68,68,.15);color:#fca5a5}
+.badge-purple{background:rgba(168,85,247,.15);color:#d8b4fe}
+.badge-gray{background:rgba(255,255,255,.06);color:var(--text2)}
+
+/* Upload zone */
+.drop-zone{border:2px dashed var(--border2);border-radius:10px;padding:40px;text-align:center;cursor:pointer;transition:all .2s}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--blue);background:rgba(59,130,246,.04)}
+.drop-zone-icon{font-size:32px;margin-bottom:10px}
+.drop-zone-text{font-size:15px;font-weight:600;margin-bottom:4px}
+.drop-zone-sub{font-size:12px;color:var(--text3)}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 18px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9999;display:none;max-width:360px}
+
+/* Panel */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-weight:700;font-size:15px}
+
+/* Progress bar */
+.progress-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s}
+
+/* Login */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:40px;width:360px}
+.login-title{font-size:22px;font-weight:700;text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px}
+
+/* Inline campaign editor */
+.editor-hints{font-size:11px;color:var(--text3);margin-top:6px;padding:8px 10px;background:var(--bg3);border-radius:5px}
+.editor-hints span{background:var(--bg2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:10px;margin:0 2px}
+
+/* Connection status */
+.conn-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.conn-row:last-child{border-bottom:none}
+.conn-name{font-weight:600;font-size:14px}
+.conn-desc{font-size:12px;color:var(--text3);margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:48px;height:48px;background:var(--blue);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin-bottom:12px">M</div>
+    </div>
+    <div class="login-title">Marketing Agent</div>
+    <div class="login-sub">Apollo + Gmail outreach automation</div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="login-email" type="email" placeholder="your@email.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Sign in →</button>
+    <div id="login-error" style="font-size:13px;color:var(--red);text-align:center;margin-top:12px;display:none"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">M</div>
+    <div class="logo-text">Marketing Agent</div>
+  </div>
+  <div class="nav">
+    <div class="nav-label">Outreach</div>
+    <div class="nav-item" id="nav-dashboard" onclick="showPage('dashboard')">Dashboard</div>
+    <div class="nav-item" id="nav-lists" onclick="showPage('lists')">Contact Lists</div>
+    <div class="nav-item" id="nav-campaigns" onclick="showPage('campaigns')">Campaigns</div>
+    <div class="nav-label">Account</div>
+    <div class="nav-item" id="nav-settings" onclick="showPage('settings')">Settings</div>
+    <div class="nav-item" onclick="doLogout()" style="margin-top:auto;color:var(--red)">Logout</div>
+  </div>
+</div>
+
+<div class="main" id="main-content">
+  <div style="padding:60px;text-align:center;color:var(--text3)">Loading…</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let token = localStorage.getItem('mktg_token') || '';
+let currentPage = 'dashboard';
+let lists = [], campaigns = [], stats = {};
+let viewingListId = null;
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Handle OAuth callbacks
+  const params = new URLSearchParams(location.search);
+  const toastType = params.get('toast');
+  if (toastType) {
+    history.replaceState({}, '', '/');
+    if (toastType === 'gmail_connected') toast(`✅ Gmail connected: ${params.get('email')}`, 'green');
+    else if (toastType === 'gmail_error') toast(`❌ Gmail error: ${params.get('msg')}`, 'red');
+    else if (toastType === 'gmail_no_refresh') toast('❌ No refresh token — revoke at myaccount.google.com/permissions and reconnect', 'red');
+  }
+  if (token) { hidLogin(); loadAll(); }
+});
+
+function hidLogin() {
+  document.getElementById('login-screen').style.display = 'none';
+}
+
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try {
+    const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }), skipAuth: true });
+    token = data.token;
+    localStorage.setItem('mktg_token', token);
+    hidLogin();
+    loadAll();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('mktg_token');
+  token = '';
+  location.reload();
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function apiFetch(url, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (!opts.skipAuth && token) headers['Authorization'] = `Bearer ${token}`;
+  const isFormData = opts.body instanceof FormData;
+  if (isFormData) delete headers['Content-Type'];
+  const res = await fetch(url, { ...opts, headers: isFormData ? (opts.headers || {Authorization: `Bearer ${token}`}) : headers });
+  if (res.status === 401) { doLogout(); throw new Error('Session expired'); }
+  const text = await res.text();
+  let json;
+  try { json = JSON.parse(text); } catch { throw new Error(text || `HTTP ${res.status}`); }
+  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  return json;
+}
+
+async function loadAll(silent = false) {
+  try {
+    [lists, campaigns, stats] = await Promise.all([
+      apiFetch('/api/lists'),
+      apiFetch('/api/campaigns'),
+      apiFetch('/api/stats'),
+    ]);
+    showPage(currentPage, true);
+  } catch (err) {
+    if (!silent) toast('Failed to load: ' + err.message, 'red');
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPage(page, silent = false) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navKey = page === 'contacts' ? 'lists' : page;
+  const navEl = document.getElementById(`nav-${navKey}`);
+  if (navEl) navEl.classList.add('active');
+
+  const content = document.getElementById('main-content');
+  if      (page === 'dashboard') renderDashboard(content);
+  else if (page === 'lists')     renderLists(content);
+  else if (page === 'contacts')  renderContacts(content);
+  else if (page === 'campaigns') renderCampaigns(content);
+  else if (page === 'settings')  renderSettings(content);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _toastTimer;
+function toast(msg, type = 'default') {
+  const el = document.getElementById('toast');
+  const colors = { green: '#22c55e', red: '#ef4444', blue: '#3b82f6', default: '#e8eaf0' };
+  el.style.color = colors[type] || colors.default;
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function statusBadge(s) {
+  const map = {
+    pending:   ['badge-gray',   'Pending'],
+    enriching: ['badge-yellow', 'Enriching…'],
+    ready:     ['badge-green',  'Ready'],
+    draft:     ['badge-gray',   'Draft'],
+    sending:   ['badge-yellow', 'Sending…'],
+    sent:      ['badge-green',  'Sent'],
+    paused:    ['badge-yellow', 'Paused'],
+    failed:    ['badge-red',    'Failed'],
+  };
+  const [cls, label] = map[s] || ['badge-gray', s || '—'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function renderDashboard(el) {
+  const s = stats;
+  el.innerHTML = `
+<div class="page-title">Dashboard</div>
+<div class="page-sub">Your outreach at a glance</div>
+
+<div class="grid-4">
+  <div class="card stat-card"><div class="stat-num">${s.total_lists||0}</div><div class="stat-label">Contact Lists</div></div>
+  <div class="card stat-card"><div class="stat-num">${s.total_contacts||0}</div><div class="stat-label">Enriched Contacts</div></div>
+  <div class="card stat-card"><div class="stat-num">${s.total_sent||0}</div><div class="stat-label">Emails Sent</div></div>
+  <div class="card stat-card"><div class="stat-num" style="color:${(s.open_rate||0)>20?'var(--green)':'var(--text)'}">${s.open_rate||0}%</div><div class="stat-label">Open Rate</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Recent Lists</div>
+      <button class="btn btn-primary btn-sm" onclick="showPage('lists')">View All →</button>
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Companies</th><th>Contacts</th><th>Status</th></tr></thead>
+      <tbody>${lists.slice(0,5).map(l => `<tr>
+        <td style="color:var(--text);font-weight:600">${esc(l.name)}</td>
+        <td>${l.row_count||0}</td>
+        <td>${l.enriched_count||0}</td>
+        <td>${statusBadge(l.status)}</td>
+      </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text3)">No lists yet</td></tr>`}</tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Recent Campaigns</div>
+      <button class="btn btn-primary btn-sm" onclick="showPage('campaigns')">View All →</button>
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Sent</th><th>Status</th></tr></thead>
+      <tbody>${campaigns.slice(0,5).map(c => `<tr>
+        <td style="color:var(--text);font-weight:600">${esc(c.name)}</td>
+        <td>${c.sent_count||0}</td>
+        <td>${statusBadge(c.status)}</td>
+      </tr>`).join('') || `<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text3)">No campaigns yet</td></tr>`}</tbody>
+    </table>
+  </div>
+</div>`;
+}
+
+// ── Lists ─────────────────────────────────────────────────────────────────────
+let enrichPollInterval = null;
+
+function renderLists(el) {
+  // Poll every 5s if any list is enriching
+  const enriching = lists.some(l => l.status === 'enriching');
+  if (enriching && !enrichPollInterval) {
+    enrichPollInterval = setInterval(() => loadAll(true), 5000);
+  } else if (!enriching && enrichPollInterval) {
+    clearInterval(enrichPollInterval);
+    enrichPollInterval = null;
+  }
+
+  el.innerHTML = `
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+  <div>
+    <div class="page-title">Contact Lists</div>
+    <div class="page-sub">Upload an Excel file, enrich with Apollo, then send campaigns</div>
+  </div>
+  <button class="btn btn-primary" onclick="showUploadModal()">+ Upload List</button>
+</div>
+
+<div id="upload-area" style="display:none;margin-bottom:20px">
+  <div class="card" style="padding:20px">
+    <div style="font-weight:700;margin-bottom:14px">Upload Excel or CSV</div>
+    <div class="form-group">
+      <label class="form-label">List Name (optional)</label>
+      <input class="form-input" id="upload-list-name" placeholder="e.g. UK Mid-Market Q2 2026" />
+    </div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="drop-zone-icon">📊</div>
+      <div class="drop-zone-text">Drop your Excel / CSV here, or click to browse</div>
+      <div class="drop-zone-sub" id="drop-zone-file">Needs a "Company" or "Company Name" column · max 20 MB</div>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileSelect(this)">
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-primary" id="upload-btn" onclick="uploadList()" disabled>Upload →</button>
+      <button class="btn btn-secondary" onclick="hideUpload()">Cancel</button>
+    </div>
+    <div id="upload-progress" style="display:none;margin-top:10px">
+      <div style="font-size:13px;color:var(--text2)" id="upload-msg">Uploading…</div>
+      <div class="progress-bar"><div class="progress-fill" id="upload-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <table>
+    <thead><tr>
+      <th>Name</th><th>File</th><th>Companies</th><th>Contacts Found</th><th>Status</th><th>Created</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${lists.length === 0 ? `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3)">
+        No lists yet — upload an Excel file to get started
+      </td></tr>` : lists.map(l => `
+      <tr>
+        <td><span style="color:var(--text);font-weight:600;cursor:pointer" onclick="viewList('${esc(l.id)}')">${esc(l.name)}</span></td>
+        <td style="font-size:12px;color:var(--text3)">${esc(l.filename||'—')}</td>
+        <td>${l.row_count||0}</td>
+        <td>${l.enriched_count||0}${l.status==='enriching'?'<span style="color:var(--yellow);font-size:11px;margin-left:4px">scanning…</span>':''}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td style="font-size:12px;color:var(--text3)">${fmtDate(l.created_at)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-secondary btn-sm" onclick="viewList('${esc(l.id)}')">Contacts →</button>
+          ${l.status !== 'enriching' ? `<button class="btn btn-primary btn-sm" onclick="enrichList('${esc(l.id)}','${esc(l.name)}')" style="margin-left:6px">Enrich</button>` : ''}
+          <button class="btn btn-danger btn-sm" onclick="deleteList('${esc(l.id)}','${esc(l.name)}')" style="margin-left:6px">✕</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+</div>`;
+
+  // Drop zone wiring
+  const dz = document.getElementById('drop-zone');
+  if (dz) {
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault(); dz.classList.remove('dragover');
+      const f = e.dataTransfer.files[0];
+      if (f) setFile(f);
+    });
+  }
+}
+
+let selectedFile = null;
+
+function showUploadModal() {
+  document.getElementById('upload-area').style.display = 'block';
+  document.getElementById('upload-area').scrollIntoView({ behavior: 'smooth' });
+}
+function hideUpload() {
+  document.getElementById('upload-area').style.display = 'none';
+  selectedFile = null;
+}
+function handleFileSelect(input) { if (input.files[0]) setFile(input.files[0]); }
+function setFile(f) {
+  selectedFile = f;
+  document.getElementById('drop-zone-file').textContent = `Selected: ${f.name} (${(f.size/1024).toFixed(0)} KB)`;
+  document.getElementById('upload-btn').disabled = false;
+}
+
+async function uploadList() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('upload-btn');
+  const prog = document.getElementById('upload-progress');
+  const msg  = document.getElementById('upload-msg');
+  const bar  = document.getElementById('upload-bar');
+
+  btn.disabled = true;
+  prog.style.display = 'block';
+  msg.textContent = 'Uploading…';
+  bar.style.width = '30%';
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+  form.append('list_name', document.getElementById('upload-list-name').value.trim());
+
+  try {
+    const res = await fetch('/api/lists/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Upload failed');
+
+    bar.style.width = '100%';
+    msg.textContent = `✅ ${json.companies} companies uploaded`;
+    toast(`Uploaded ${json.companies} companies. Click Enrich to find contacts.`, 'green');
+    setTimeout(() => { hideUpload(); loadAll(); }, 1000);
+  } catch (err) {
+    bar.style.width = '0%';
+    msg.textContent = '❌ ' + err.message;
+    msg.style.color = 'var(--red)';
+    btn.disabled = false;
+  }
+}
+
+async function enrichList(id, name) {
+  try {
+    const data = await apiFetch(`/api/lists/${id}/enrich`, { method: 'POST' });
+    toast(`Enriching "${name}" — ${data.total||0} companies queued. Page refreshes automatically.`, 'blue');
+    await loadAll(true);
+  } catch (err) {
+    toast('Enrich failed: ' + err.message, 'red');
+  }
+}
+
+async function deleteList(id, name) {
+  if (!confirm(`Delete list "${name}" and all its contacts?`)) return;
+  try {
+    await apiFetch(`/api/lists/${id}`, { method: 'DELETE' });
+    toast(`Deleted "${name}"`, 'default');
+    await loadAll(true);
+  } catch (err) {
+    toast('Delete failed: ' + err.message, 'red');
+  }
+}
+
+function viewList(id) {
+  viewingListId = id;
+  showPage('contacts');
+}
+
+// ── Contacts ──────────────────────────────────────────────────────────────────
+async function renderContacts(el) {
+  const list = lists.find(l => l.id === viewingListId);
+  el.innerHTML = `
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+  <button class="btn btn-secondary" onclick="showPage('lists')">← Lists</button>
+  <div>
+    <div class="page-title">${esc(list?.name||'Contacts')}</div>
+    <div class="page-sub">${list?.enriched_count||0} contacts with emails · ${list?.row_count||0} companies scanned</div>
+  </div>
+  <div style="margin-left:auto">
+    ${list?.status !== 'enriching' ? `<button class="btn btn-primary" onclick="enrichList('${esc(viewingListId)}','${esc(list?.name||'')}')">Re-Enrich</button>` : `<span class="badge badge-yellow">Enriching…</span>`}
+  </div>
+</div>
+<div class="panel" id="contacts-panel">
+  <div style="padding:20px;text-align:center;color:var(--text3)">Loading contacts…</div>
+</div>`;
+
+  try {
+    const contacts = await apiFetch(`/api/lists/${viewingListId}/contacts`);
+    const withEmail = contacts.filter(c => c.email);
+    const noEmail   = contacts.filter(c => !c.email && c.enriched);
+
+    document.getElementById('contacts-panel').innerHTML = `
+<div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text3);display:flex;gap:20px">
+  <span>${withEmail.length} with email</span>
+  <span>${noEmail.length} no contact found</span>
+  <span>${contacts.filter(c => c.opted_out).length} unsubscribed</span>
+</div>
+<table>
+  <thead><tr><th>Name</th><th>Title</th><th>Company</th><th>Email</th><th>LinkedIn</th><th>Status</th></tr></thead>
+  <tbody>
+    ${contacts.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">No contacts yet — click Enrich to scan Apollo</td></tr>` :
+      contacts.map(c => `<tr>
+        <td style="color:var(--text);font-weight:${c.email?'600':'400'}">${esc([c.first_name,c.last_name].filter(Boolean).join(' '))||'—'}</td>
+        <td style="font-size:12px;color:var(--text2)">${esc(c.title||'—')}</td>
+        <td>${esc(c.company_name||'—')}</td>
+        <td style="font-family:monospace;font-size:12px;color:${c.email?'var(--blue)':'var(--text3)'}">${esc(c.email||'—')}</td>
+        <td>${c.linkedin_url?`<a href="${esc(c.linkedin_url)}" target="_blank" style="color:var(--blue);font-size:12px">Profile →</a>`:'—'}</td>
+        <td>${c.opted_out?'<span class="badge badge-red">Unsubscribed</span>':c.email?'<span class="badge badge-green">Active</span>':'<span class="badge badge-gray">No email</span>'}</td>
+      </tr>`).join('')}
+  </tbody>
+</table>`;
+  } catch (err) {
+    document.getElementById('contacts-panel').innerHTML = `<div style="padding:24px;color:var(--red)">${esc(err.message)}</div>`;
+  }
+}
+
+// ── Campaigns ─────────────────────────────────────────────────────────────────
+let editingCampaignId = null;
+
+function renderCampaigns(el) {
+  if (editingCampaignId !== null) { renderCampaignEditor(el); return; }
+
+  el.innerHTML = `
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+  <div>
+    <div class="page-title">Campaigns</div>
+    <div class="page-sub">Create email templates and send to your contact lists</div>
+  </div>
+  <button class="btn btn-primary" onclick="newCampaign()">+ New Campaign</button>
+</div>
+
+<div class="panel">
+  <table>
+    <thead><tr><th>Name</th><th>Subject</th><th>Sent</th><th>Status</th><th>Created</th><th></th></tr></thead>
+    <tbody>
+      ${campaigns.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text3)">No campaigns yet</td></tr>` :
+        campaigns.map(c => `<tr>
+          <td style="color:var(--text);font-weight:600">${esc(c.name)}</td>
+          <td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)">${esc(c.subject)}</td>
+          <td>${c.sent_count||0}</td>
+          <td>${statusBadge(c.status)}</td>
+          <td style="font-size:12px;color:var(--text3)">${fmtDate(c.created_at)}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-secondary btn-sm" onclick="editCampaign('${esc(c.id)}')">Edit</button>
+            <button class="btn btn-primary btn-sm" onclick="openSendModal('${esc(c.id)}','${esc(c.name)}')" style="margin-left:6px" ${c.status==='sending'?'disabled':''}>Send →</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${esc(c.id)}','${esc(c.name)}')" style="margin-left:6px">✕</button>
+          </td>
+        </tr>`).join('')}
+    </tbody>
+  </table>
+</div>
+
+<!-- Send modal -->
+<div id="send-modal" style="display:none;margin-top:20px">
+  <div class="card" style="padding:20px;max-width:480px">
+    <div style="font-weight:700;margin-bottom:14px">Send Campaign: <span id="send-modal-name"></span></div>
+    <div class="form-group">
+      <label class="form-label">Select Contact List</label>
+      <select class="form-input" id="send-list-select">
+        <option value="">— choose a list —</option>
+        ${lists.filter(l => l.enriched_count > 0).map(l =>
+          `<option value="${esc(l.id)}">${esc(l.name)} (${l.enriched_count} contacts)</option>`
+        ).join('')}
+      </select>
+    </div>
+    <div id="send-warning" style="font-size:12px;color:var(--yellow);margin-bottom:12px;display:none">
+      ⚠️ Sending is throttled to ~40 emails/min to stay within Gmail limits.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-green" id="send-confirm-btn" onclick="confirmSend()">Send Campaign</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('send-modal').style.display='none'">Cancel</button>
+    </div>
+    <div id="send-result" style="margin-top:10px;font-size:13px;display:none"></div>
+  </div>
+</div>`;
+}
+
+function newCampaign() {
+  editingCampaignId = 'new';
+  renderCampaignEditor(document.getElementById('main-content'));
+}
+
+function editCampaign(id) {
+  editingCampaignId = id;
+  renderCampaignEditor(document.getElementById('main-content'));
+}
+
+function renderCampaignEditor(el) {
+  const c = campaigns.find(c => c.id === editingCampaignId) || {};
+  const isNew = editingCampaignId === 'new';
+
+  el.innerHTML = `
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+  <button class="btn btn-secondary" onclick="editingCampaignId=null;showPage('campaigns')">← Campaigns</button>
+  <div class="page-title">${isNew ? 'New Campaign' : `Edit: ${esc(c.name)}`}</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 380px;gap:20px">
+  <div class="card" style="padding:24px">
+    <div class="form-group">
+      <label class="form-label">Campaign Name</label>
+      <input class="form-input" id="c-name" value="${esc(c.name||'')}" placeholder="e.g. Q2 2026 Outreach" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">From Name (overrides settings default)</label>
+      <input class="form-input" id="c-from" value="${esc(c.from_name||'')}" placeholder="e.g. Alex from Shodipo" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subject Line</label>
+      <input class="form-input" id="c-subject" value="${esc(c.subject||'')}" placeholder="e.g. Automating reconciliation at {{company}}" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email Body (HTML supported)</label>
+      <textarea class="form-textarea" id="c-body" rows="14">${esc(c.body_html||defaultTemplate())}</textarea>
+      <div class="editor-hints">
+        Variables: <span>{{first_name}}</span> <span>{{last_name}}</span> <span>{{full_name}}</span> <span>{{company}}</span> <span>{{title}}</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="saveCampaign(${isNew})">${isNew ? 'Create Campaign' : 'Save Changes'}</button>
+      <button class="btn btn-secondary" onclick="editingCampaignId=null;showPage('campaigns')">Cancel</button>
+    </div>
+    <div id="c-msg" style="margin-top:10px;font-size:13px;display:none"></div>
+  </div>
+
+  <div>
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--text2)">PREVIEW</div>
+      <div id="c-preview" style="font-size:13px;line-height:1.7;color:var(--text2);max-height:400px;overflow-y:auto;border-top:1px solid var(--border);padding-top:12px"></div>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--text2)">TIPS</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">
+        • Keep subject under 50 chars<br>
+        • Open with their first name<br>
+        • One clear CTA per email<br>
+        • Plain HTML performs better than heavy styling<br>
+        • Unsubscribe link is added automatically
+      </div>
+    </div>
+  </div>
+</div>`;
+
+  // Live preview
+  const bodyEl = document.getElementById('c-body');
+  const preview = document.getElementById('c-preview');
+  function updatePreview() {
+    const sample = { first_name:'Alex', last_name:'Johnson', company:'Acme Corp', title:'CFO', email:'alex@acme.com' };
+    const html = bodyEl.value
+      .replace(/\{\{first_name\}\}/gi, sample.first_name)
+      .replace(/\{\{last_name\}\}/gi, sample.last_name)
+      .replace(/\{\{full_name\}\}/gi, 'Alex Johnson')
+      .replace(/\{\{company\}\}/gi, sample.company)
+      .replace(/\{\{title\}\}/gi, sample.title);
+    preview.innerHTML = html;
+  }
+  bodyEl.addEventListener('input', updatePreview);
+  updatePreview();
+}
+
+function defaultTemplate() {
+  return `<p>Hi {{first_name}},</p>
+
+<p>I came across {{company}} and wanted to reach out about how we're helping finance teams automate their reconciliation process.</p>
+
+<p>Shodipo connects your PSP settlements (Stripe, Klarna, etc.) to your bank account automatically — most clients go from days of manual work to minutes.</p>
+
+<p>Would you be open to a 20-minute call to see if it's a fit for {{company}}?</p>
+
+<p>Best,<br>
+[Your Name]</p>`;
+}
+
+async function saveCampaign(isNew) {
+  const name     = document.getElementById('c-name').value.trim();
+  const subject  = document.getElementById('c-subject').value.trim();
+  const body_html = document.getElementById('c-body').value;
+  const from_name = document.getElementById('c-from').value.trim();
+  const msgEl    = document.getElementById('c-msg');
+
+  if (!name || !subject || !body_html) {
+    msgEl.textContent = '❌ Name, subject, and body are required';
+    msgEl.style.color = 'var(--red)';
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    if (isNew) {
+      await apiFetch('/api/campaigns', { method: 'POST', body: JSON.stringify({ name, subject, body_html, from_name }) });
+    } else {
+      await apiFetch(`/api/campaigns/${editingCampaignId}`, { method: 'PUT', body: JSON.stringify({ name, subject, body_html, from_name }) });
+    }
+    editingCampaignId = null;
+    await loadAll(true);
+    toast(isNew ? 'Campaign created' : 'Campaign saved', 'green');
+    showPage('campaigns');
+  } catch (err) {
+    msgEl.textContent = '❌ ' + err.message;
+    msgEl.style.color = 'var(--red)';
+    msgEl.style.display = 'block';
+  }
+}
+
+let sendingCampaignId = null;
+
+function openSendModal(id, name) {
+  sendingCampaignId = id;
+  document.getElementById('send-modal').style.display = 'block';
+  document.getElementById('send-modal-name').textContent = name;
+  document.getElementById('send-result').style.display = 'none';
+  document.getElementById('send-warning').style.display = 'block';
+  document.getElementById('send-modal').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function confirmSend() {
+  const listId = document.getElementById('send-list-select').value;
+  if (!listId) { toast('Select a list first', 'red'); return; }
+  const btn = document.getElementById('send-confirm-btn');
+  const res = document.getElementById('send-result');
+  btn.disabled = true;
+  btn.textContent = 'Queuing…';
+  try {
+    const data = await apiFetch(`/api/campaigns/${sendingCampaignId}/send`, {
+      method: 'POST',
+      body: JSON.stringify({ list_id: listId }),
+    });
+    res.style.color = 'var(--green)';
+    res.textContent = `✅ ${data.queued} emails queued — sending in background`;
+    res.style.display = 'block';
+    btn.textContent = 'Queued ✓';
+    await loadAll(true);
+  } catch (err) {
+    res.style.color = 'var(--red)';
+    res.textContent = '❌ ' + err.message;
+    res.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Send Campaign';
+  }
+}
+
+async function deleteCampaign(id, name) {
+  if (!confirm(`Delete campaign "${name}"?`)) return;
+  try {
+    await apiFetch(`/api/campaigns/${id}`, { method: 'DELETE' });
+    toast(`Deleted "${name}"`, 'default');
+    await loadAll(true);
+  } catch (err) {
+    toast('Delete failed: ' + err.message, 'red');
+  }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+async function renderSettings(el) {
+  el.innerHTML = `<div class="page-title">Settings</div><div class="page-sub">Connect Apollo and Gmail to enable enrichment and sending</div><div style="padding:20px;color:var(--text3)">Loading…</div>`;
+  try {
+    const s = await apiFetch('/api/settings');
+
+    el.innerHTML = `
+<div class="page-title">Settings</div>
+<div class="page-sub">Connect Apollo and Gmail to enable enrichment and sending</div>
+
+<div style="max-width:580px">
+
+  <!-- Connections -->
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:16px">Integrations</div>
+
+    <div class="conn-row">
+      <div>
+        <div class="conn-name">Apollo.io</div>
+        <div class="conn-desc">Finds decision-maker contacts (CFO, Finance Director, etc.) for each company</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${s.apollo_connected ? `<span class="badge badge-green">Connected</span>` : `<span class="badge badge-gray">Not set</span>`}
+        <button class="btn btn-secondary btn-sm" onclick="showApolloInput()">
+          ${s.apollo_connected ? 'Update Key' : 'Add Key'}
+        </button>
+      </div>
+    </div>
+    <div id="apollo-input-row" style="display:none;margin-top:12px">
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="apollo-key-input" type="password" placeholder="Paste Apollo API key" style="flex:1" />
+        <button class="btn btn-primary" onclick="saveApolloKey()">Save</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('apollo-input-row').style.display='none'">Cancel</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">
+        Find your key at apollo.io → Settings → API Keys. Paid plan recommended for bulk enrichment.
+      </div>
+    </div>
+
+    <div class="conn-row">
+      <div>
+        <div class="conn-name">Gmail</div>
+        <div class="conn-desc">${s.gmail_connected ? `Sending as <strong style="color:var(--text)">${esc(s.gmail_email||'')}</strong>` : 'Connect your Google account to send campaigns'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${s.gmail_connected ? `<span class="badge badge-green">Connected</span>` : `<span class="badge badge-gray">Not connected</span>`}
+        ${s.gmail_connected
+          ? `<button class="btn btn-danger btn-sm" onclick="disconnectGmail()">Disconnect</button>`
+          : `<button class="btn btn-primary btn-sm" onclick="connectGmail()">Connect Gmail →</button>`}
+      </div>
+    </div>
+    ${!process.env?.GMAIL_CLIENT_ID ? '' : ''}
+    <div style="margin-top:4px;font-size:11px;color:var(--text3);padding:8px 0">
+      Gmail requires <code style="background:var(--bg3);padding:1px 4px;border-radius:3px">GMAIL_CLIENT_ID</code> and <code style="background:var(--bg3);padding:1px 4px;border-radius:3px">GMAIL_CLIENT_SECRET</code> env vars set on your server.
+    </div>
+  </div>
+
+  <!-- General settings -->
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:16px">General</div>
+    <div class="form-group">
+      <label class="form-label">Default From Name</label>
+      <input class="form-input" id="from-name-input" value="${esc(s.from_name||'')}" placeholder="e.g. Alex from Shodipo" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">App URL (for tracking pixels)</label>
+      <input class="form-input" id="app-url-input" value="${esc(s.app_url||'')}" placeholder="https://your-app.up.railway.app" />
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Must be publicly accessible — tracking pixels and unsubscribe links use this.</div>
+    </div>
+    <button class="btn btn-primary" onclick="saveGeneralSettings()">Save Settings</button>
+    <span id="settings-saved" style="font-size:13px;color:var(--green);margin-left:12px;display:none">✅ Saved</span>
+  </div>
+
+</div>`;
+  } catch (err) {
+    el.innerHTML += `<div style="color:var(--red);padding:16px">${esc(err.message)}</div>`;
+  }
+}
+
+function showApolloInput() {
+  document.getElementById('apollo-input-row').style.display = 'block';
+  document.getElementById('apollo-key-input').focus();
+}
+
+async function saveApolloKey() {
+  const key = document.getElementById('apollo-key-input').value.trim();
+  if (!key) return;
+  try {
+    await apiFetch('/api/settings', { method: 'POST', body: JSON.stringify({ apollo_key: key }) });
+    toast('Apollo key saved', 'green');
+    renderSettings(document.getElementById('main-content'));
+  } catch (err) {
+    toast('Failed: ' + err.message, 'red');
+  }
+}
+
+function connectGmail() {
+  // Navigate directly — triggers OAuth redirect on the server
+  window.location.href = '/api/gmail/auth';
+}
+
+async function disconnectGmail() {
+  if (!confirm('Disconnect Gmail? You will need to reconnect to send campaigns.')) return;
+  try {
+    await apiFetch('/api/gmail/disconnect', { method: 'POST' });
+    toast('Gmail disconnected', 'default');
+    renderSettings(document.getElementById('main-content'));
+  } catch (err) {
+    toast('Failed: ' + err.message, 'red');
+  }
+}
+
+async function saveGeneralSettings() {
+  const from_name = document.getElementById('from-name-input').value.trim();
+  const app_url   = document.getElementById('app-url-input').value.trim();
+  try {
+    await apiFetch('/api/settings', { method: 'POST', body: JSON.stringify({ from_name, app_url }) });
+    const el = document.getElementById('settings-saved');
+    el.style.display = 'inline';
+    setTimeout(() => { el.style.display = 'none'; }, 2000);
+  } catch (err) {
+    toast('Failed: ' + err.message, 'red');
+  }
+}
+</script>
+</body>
+</html>
