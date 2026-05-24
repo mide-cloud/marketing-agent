@@ -391,6 +391,7 @@ function renderLists(el) {
         <td style="white-space:nowrap">
           <button class="btn btn-secondary btn-sm" onclick="viewList('${esc(l.id)}')">Contacts →</button>
           ${l.status !== 'enriching' ? `<button class="btn btn-primary btn-sm" onclick="enrichList('${esc(l.id)}','${esc(l.name)}')" style="margin-left:6px">Enrich</button>` : ''}
+          ${l.enriched_count > 0 ? `<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();downloadCSV('${esc(l.id)}','${esc(l.name)}')" style="margin-left:6px">↓ CSV</button>` : ''}
           <button class="btn btn-danger btn-sm" onclick="deleteList('${esc(l.id)}','${esc(l.name)}')" style="margin-left:6px">✕</button>
         </td>
       </tr>`).join('')}
@@ -473,6 +474,20 @@ async function enrichList(id, name) {
   } catch (err) {
     toast('Enrich failed: ' + err.message, 'red');
   }
+}
+
+async function downloadCSV(id, name) {
+  try {
+    const res = await fetch(`/api/lists/${id}/export`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) { toast('Export failed', 'red'); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = name.replace(/[^a-z0-9]/gi, '_') + '_enriched.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) { toast('Export failed: ' + err.message, 'red'); }
 }
 
 async function deleteList(id, name) {
@@ -567,6 +582,7 @@ function renderCampaigns(el) {
           <td style="font-size:12px;color:var(--text3)">${fmtDate(c.created_at)}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-secondary btn-sm" onclick="editCampaign('${esc(c.id)}')">Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="openTestModal('${esc(c.id)}','${esc(c.name)}')" style="margin-left:6px">Test</button>
             <button class="btn btn-primary btn-sm" onclick="openSendModal('${esc(c.id)}','${esc(c.name)}')" style="margin-left:6px" ${c.status==='sending'?'disabled':''}>Send →</button>
             <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${esc(c.id)}','${esc(c.name)}')" style="margin-left:6px">✕</button>
           </td>
@@ -575,10 +591,36 @@ function renderCampaigns(el) {
   </table>
 </div>
 
+<!-- Test modal -->
+<div id="test-modal" style="display:none;margin-top:20px">
+  <div class="card" style="padding:20px;max-width:480px">
+    <div style="font-weight:700;margin-bottom:14px">Test Campaign: <span id="test-modal-name"></span></div>
+    <div class="form-group">
+      <label class="form-label">Send test to</label>
+      <input class="form-input" id="test-email-input" type="email" placeholder="your@email.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Use variables from list (optional)</label>
+      <select class="form-input" id="test-list-select">
+        <option value="">— use dummy data —</option>
+        ${lists.filter(l => l.enriched_count > 0).map(l =>
+          `<option value="${esc(l.id)}">${esc(l.name)} (${l.enriched_count} contacts)</option>`
+        ).join('')}
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="confirmTest()">Send Test</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('test-modal').style.display='none'">Cancel</button>
+    </div>
+    <div id="test-result" style="margin-top:10px;font-size:13px;display:none"></div>
+  </div>
+</div>
+
 <!-- Send modal -->
 <div id="send-modal" style="display:none;margin-top:20px">
-  <div class="card" style="padding:20px;max-width:480px">
-    <div style="font-weight:700;margin-bottom:14px">Send Campaign: <span id="send-modal-name"></span></div>
+  <div class="card" style="padding:20px;max-width:480px;border:1px solid var(--yellow)">
+    <div style="font-weight:700;margin-bottom:4px">Manual Send: <span id="send-modal-name"></span></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Use this only if you need to send outside the scheduled 8:20am batch. Capped at 40 emails.</div>
     <div class="form-group">
       <label class="form-label">Select Contact List</label>
       <select class="form-input" id="send-list-select">
@@ -588,11 +630,17 @@ function renderCampaigns(el) {
         ).join('')}
       </select>
     </div>
-    <div id="send-warning" style="font-size:12px;color:var(--yellow);margin-bottom:12px;display:none">
-      ⚠️ Sending is throttled to ~40 emails/min to stay within Gmail limits.
+    <div style="background:rgba(234,179,8,0.1);border:1px solid var(--yellow);border-radius:6px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--yellow)">
+      ⚠️ <strong>This will immediately send up to 40 emails.</strong> The scheduled send at 8:20am already handles this automatically. Only proceed if you have a specific reason to send now.
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="send-confirm-check" style="width:15px;height:15px" onchange="document.getElementById('send-confirm-btn').disabled=!this.checked" />
+        I understand this sends immediately and cannot be undone
+      </label>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-green" id="send-confirm-btn" onclick="confirmSend()">Send Campaign</button>
+      <button class="btn btn-green" id="send-confirm-btn" onclick="confirmSend()" disabled>Send 20 Now</button>
       <button class="btn btn-secondary" onclick="document.getElementById('send-modal').style.display='none'">Cancel</button>
     </div>
     <div id="send-result" style="margin-top:10px;font-size:13px;display:none"></div>
@@ -729,6 +777,32 @@ async function saveCampaign(isNew) {
 
 let sendingCampaignId = null;
 
+let testingCampaignId = null;
+function openTestModal(id, name) {
+  testingCampaignId = id;
+  document.getElementById('test-modal').style.display = 'block';
+  document.getElementById('test-modal-name').textContent = name;
+  document.getElementById('test-result').style.display = 'none';
+  document.getElementById('test-email-input').value = '';
+  document.getElementById('send-modal').style.display = 'none';
+}
+
+async function confirmTest() {
+  const toEmail = document.getElementById('test-email-input').value.trim();
+  const listId  = document.getElementById('test-list-select').value;
+  if (!toEmail) return alert('Enter an email address');
+
+  const btn = document.querySelector('#test-modal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const res  = await apiFetch(`/api/campaigns/${testingCampaignId}/test`, { method: 'POST', body: JSON.stringify({ to_email: toEmail, list_id: listId || null }) });
+  const el   = document.getElementById('test-result');
+  el.style.display = 'block';
+  el.style.color   = res.success ? 'var(--green)' : 'var(--red)';
+  el.textContent   = res.message || res.error || 'Unknown error';
+  btn.disabled = false; btn.textContent = 'Send Test';
+}
+
 function openSendModal(id, name) {
   sendingCampaignId = id;
   document.getElementById('send-modal').style.display = 'block';
@@ -826,7 +900,7 @@ async function renderSettings(el) {
           : `<button class="btn btn-primary btn-sm" onclick="connectGmail()">Connect Gmail →</button>`}
       </div>
     </div>
-    ${!process.env?.GMAIL_CLIENT_ID ? '' : ''}
+
     <div style="margin-top:4px;font-size:11px;color:var(--text3);padding:8px 0">
       Gmail requires <code style="background:var(--bg3);padding:1px 4px;border-radius:3px">GMAIL_CLIENT_ID</code> and <code style="background:var(--bg3);padding:1px 4px;border-radius:3px">GMAIL_CLIENT_SECRET</code> env vars set on your server.
     </div>
@@ -846,6 +920,34 @@ async function renderSettings(el) {
     </div>
     <button class="btn btn-primary" onclick="saveGeneralSettings()">Save Settings</button>
     <span id="settings-saved" style="font-size:13px;color:var(--green);margin-left:12px;display:none">✅ Saved</span>
+  </div>
+
+  <!-- Scheduled send -->
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">Scheduled Send</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Sends 40 emails automatically every day at 8:20am Irish time. Picks up where it left off each day.</div>
+    <div class="form-group">
+      <label class="form-label">Campaign</label>
+      <select class="form-input" id="sched-campaign-select">
+        <option value="">— select a campaign —</option>
+        ${campaigns.map(c => `<option value="${esc(c.id)}" ${s.scheduled_campaign_id===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contact List</label>
+      <select class="form-input" id="sched-list-select">
+        <option value="">— select a list —</option>
+        ${lists.filter(l=>l.enriched_count>0).map(l => `<option value="${esc(l.id)}" ${s.scheduled_list_id===l.id?'selected':''}>${esc(l.name)} (${l.enriched_count} contacts)</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="sched-enabled" ${s.scheduled_send_enabled?'checked':''} style="width:16px;height:16px" />
+        <span style="font-size:13px">Enable daily sends</span>
+      </label>
+      <button class="btn btn-primary" onclick="saveScheduledSettings()">Save</button>
+      <span id="sched-saved" style="font-size:13px;color:var(--green);display:none">✅ Saved</span>
+    </div>
   </div>
 
 </div>`;
@@ -885,6 +987,18 @@ async function disconnectGmail() {
   } catch (err) {
     toast('Failed: ' + err.message, 'red');
   }
+}
+
+async function saveScheduledSettings() {
+  const scheduled_campaign_id  = document.getElementById('sched-campaign-select').value || null;
+  const scheduled_list_id      = document.getElementById('sched-list-select').value || null;
+  const scheduled_send_enabled = document.getElementById('sched-enabled').checked;
+  try {
+    await apiFetch('/api/settings', { method: 'POST', body: JSON.stringify({ scheduled_campaign_id, scheduled_list_id, scheduled_send_enabled }) });
+    const el = document.getElementById('sched-saved');
+    el.style.display = 'inline';
+    setTimeout(() => { el.style.display = 'none'; }, 2000);
+  } catch (err) { toast('Failed: ' + err.message, 'red'); }
 }
 
 async function saveGeneralSettings() {
