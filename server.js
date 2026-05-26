@@ -795,8 +795,14 @@ app.get('*', (req, res) => {
 // ── Scheduled daily send — 9am Irish time ────────────────────────────────────
 
 async function runScheduledSend() {
-  console.log('[Scheduled] Running daily send at 9am Irish time…');
+  console.log('[Scheduled] Running daily send…');
   try {
+    // DB-level duplicate guard — only one send per day regardless of how many servers are running
+    const today = new Date().toISOString().slice(0, 10);
+    const todayStart = new Date(today + 'T00:00:00.000Z').toISOString();
+    const { data: todayCheck } = await supabase.from('sends').select('id').gte('created_at', todayStart).limit(1);
+    if (todayCheck?.length) return console.log('[Scheduled] Already sent today — skipping');
+
     const s = await getSettings();
     if (!s.scheduled_send_enabled)      return console.log('[Scheduled] Disabled — skipping');
     if (!s.scheduled_campaign_id)       return console.log('[Scheduled] No campaign configured');
@@ -879,7 +885,7 @@ cron.schedule('*/10 * * * *', async () => {
 
     // Check if any sends went out today already
     const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
-    const { data: todaySends } = await supabase.from('sends').select('id').gte('sent_at', todayStart.toISOString()).limit(1);
+    const { data: todaySends } = await supabase.from('sends').select('id').gte('created_at', todayStart.toISOString()).limit(1);
     if (todaySends?.length) { lastSendDate = today; return; }
 
     console.log('[Catch-up] No sends detected today — triggering scheduled send now');
