@@ -979,7 +979,7 @@ async function runDailyReport() {
 
 cron.schedule('0 18 * * *', runDailyReport, { timezone: 'Europe/Dublin' });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Marketing Agent running → http://localhost:${PORT}`);
   if (!process.env.GMAIL_CLIENT_ID) console.warn('⚠️  GMAIL_CLIENT_ID not set — Gmail sending will not work');
   if (!process.env.SUPABASE_URL)    console.warn('⚠️  SUPABASE_URL not set');
